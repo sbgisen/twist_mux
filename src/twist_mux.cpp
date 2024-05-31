@@ -50,15 +50,14 @@
  * @param new_twist New velocity
  * @return true is any of the absolute velocity components has increased
  */
-bool hasIncreasedAbsVelocity(
-  const geometry_msgs::msg::Twist & old_twist,
-  const geometry_msgs::msg::Twist & new_twist)
+bool hasIncreasedAbsVelocity(const geometry_msgs::msg::TwistStamped& old_twist,
+                             const geometry_msgs::msg::TwistStamped& new_twist)
 {
-  const auto old_linear_x = std::abs(old_twist.linear.x);
-  const auto new_linear_x = std::abs(new_twist.linear.x);
+  const auto old_linear_x = std::abs(old_twist.twist.linear.x);
+  const auto new_linear_x = std::abs(new_twist.twist.linear.x);
 
-  const auto old_angular_z = std::abs(old_twist.angular.z);
-  const auto new_angular_z = std::abs(new_twist.angular.z);
+  const auto old_angular_z = std::abs(old_twist.twist.angular.z);
+  const auto new_angular_z = std::abs(new_twist.twist.angular.z);
 
   return (old_linear_x < new_linear_x) || (old_angular_z < new_angular_z);
 }
@@ -84,10 +83,7 @@ void TwistMux::init()
   getTopicHandles("locks", *lock_hs_);
 
   /// Publisher for output topic:
-  cmd_pub_ =
-    this->create_publisher<geometry_msgs::msg::Twist>(
-    "cmd_vel_out",
-    rclcpp::QoS(rclcpp::KeepLast(1)));
+  cmd_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("cmd_vel_out", rclcpp::QoS(rclcpp::KeepLast(1)));
 
   /// Diagnostics:
   diagnostics_ = std::make_shared<diagnostics_type>(this);
@@ -107,7 +103,7 @@ void TwistMux::updateDiagnostics()
   diagnostics_->updateStatus(status_);
 }
 
-void TwistMux::publishTwist(const geometry_msgs::msg::Twist::ConstSharedPtr & msg)
+void TwistMux::publishTwist(const geometry_msgs::msg::TwistStamped::ConstSharedPtr& msg)
 {
   cmd_pub_->publish(*msg);
 }

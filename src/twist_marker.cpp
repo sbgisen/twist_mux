@@ -33,7 +33,7 @@
  */
 
 #include <rclcpp/rclcpp.hpp>
-#include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <visualization_msgs/msg/marker.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 
@@ -73,16 +73,19 @@ public:
     marker_.points[1].z = 0.01;
   }
 
-  void update(const geometry_msgs::msg::Twist & twist)
+  void update(const geometry_msgs::msg::TwistStamped& twist)
   {
     using std::abs;
 
-    marker_.points[1].x = twist.linear.x;
+    marker_.points[1].x = twist.twist.linear.x;
 
-    if (abs(twist.linear.y) > abs(twist.angular.z)) {
-      marker_.points[1].y = twist.linear.y;
-    } else {
-      marker_.points[1].y = twist.angular.z;
+    if (abs(twist.twist.linear.y) > abs(twist.twist.angular.z))
+    {
+      marker_.points[1].y = twist.twist.linear.y;
+    }
+    else
+    {
+      marker_.points[1].y = twist.twist.angular.z;
     }
   }
 
@@ -119,9 +122,8 @@ public:
 
     marker_ = std::make_shared<TwistMarker>(frame_id, scale, z);
 
-    sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
-      "twist", rclcpp::SystemDefaultsQoS(),
-      std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1));
+    sub_ = this->create_subscription<geometry_msgs::msg::TwistStamped>(
+        "twist", rclcpp::SystemDefaultsQoS(), std::bind(&TwistMarkerPublisher::callback, this, std::placeholders::_1));
 
     pub_ =
       this->create_publisher<visualization_msgs::msg::Marker>(
@@ -129,7 +131,7 @@ public:
       rclcpp::QoS(rclcpp::KeepLast(1)));
   }
 
-  void callback(const geometry_msgs::msg::Twist::ConstSharedPtr twist)
+  void callback(const geometry_msgs::msg::TwistStamped::ConstSharedPtr twist)
   {
     marker_->update(*twist);
 
@@ -137,7 +139,7 @@ public:
   }
 
 private:
-  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr sub_;
+  rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_;
   rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr pub_;
 
   std::shared_ptr<TwistMarker> marker_ = nullptr;
